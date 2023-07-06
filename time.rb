@@ -4,15 +4,26 @@ class TimeApp
 
   def call(env)
     request = Rack::Request.new(env)
-    @params_format = request.params['format'].split(',')
-
-    [ nice_format? ? '200' : '400', { 'Content-Type' => 'text/plain' }, [format] ]
+    if nice_url?(request)
+      @params_format = request.params['format'].split(',')
+      Rack::Response.new([format], code_resonse, { 'Content-Type' => 'text/plain' }).finish
+    else
+      Rack::Response.new(['Not Found'], 404, { 'Content-Type' => 'text/plain' }).finish
+    end
   end
 
   private
 
+  def nice_url?(request)
+    request.path_info == '/time' && request.params['format']
+  end
+
   def nice_format?
     @params_format.all? { |format| AVAILABLE_FORMATS.key?(format) }
+  end
+
+  def code_resonse
+    nice_format? ? 200 : 400
   end
 
   def format
