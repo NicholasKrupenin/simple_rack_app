@@ -3,20 +3,16 @@ require_relative 'middleware/time_service'
 class TimeApp
   def call(env)
     request = Rack::Request.new(env)
-    if request.params['format']
-      TimeService.new(request).form
+    if TimeService.new(request).bad_format.empty?
+      send_response(TimeService.new(request).format, 200)
     else
-      [status, {}, body]
+      send_response("Unknown time format #{TimeService.new(request).bad_format}", 400)
     end
   end
 
   private
 
-  def status
-    200
-  end
-
-  def body
-    [Time.now.to_s]
+  def send_response(body, status)
+    Rack::Response.new(body, status).finish
   end
 end
